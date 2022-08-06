@@ -60,12 +60,13 @@ struct ImGui_ImplVulkan_InitInfo
     uint32_t                        MinImageCount;          // >= 2
     uint32_t                        ImageCount;             // >= MinImageCount
     VkSampleCountFlagBits           MSAASamples;            // >= VK_SAMPLE_COUNT_1_BIT (0 -> default to VK_SAMPLE_COUNT_1_BIT)
+    VkFormat                        ColorAttachmentFormat;  // MK
     const VkAllocationCallbacks*    Allocator;
     void                            (*CheckVkResultFn)(VkResult err);
 };
 
 // Called by user code
-IMGUI_IMPL_API bool         ImGui_ImplVulkan_Init(ImGui_ImplVulkan_InitInfo* info, VkRenderPass render_pass);
+IMGUI_IMPL_API bool         ImGui_ImplVulkan_Init(ImGui_ImplVulkan_InitInfo* info);
 IMGUI_IMPL_API void         ImGui_ImplVulkan_Shutdown();
 IMGUI_IMPL_API void         ImGui_ImplVulkan_NewFrame();
 IMGUI_IMPL_API void         ImGui_ImplVulkan_RenderDrawData(ImDrawData* draw_data, VkCommandBuffer command_buffer, VkPipeline pipeline = VK_NULL_HANDLE);
@@ -117,7 +118,7 @@ struct ImGui_ImplVulkanH_Frame
     VkFence             Fence;
     VkImage             Backbuffer;
     VkImageView         BackbufferView;
-    VkFramebuffer       Framebuffer;
+    //VkFramebuffer       Framebuffer;// MK
 };
 
 struct ImGui_ImplVulkanH_FrameSemaphores
@@ -136,7 +137,7 @@ struct ImGui_ImplVulkanH_Window
     VkSurfaceKHR        Surface;
     VkSurfaceFormatKHR  SurfaceFormat;
     VkPresentModeKHR    PresentMode;
-    VkRenderPass        RenderPass;
+    //VkRenderPass        RenderPass; // MK
     VkPipeline          Pipeline;               // The window pipeline may uses a different VkRenderPass than the one passed in ImGui_ImplVulkan_InitInfo
     bool                ClearEnable;
     VkClearValue        ClearValue;
