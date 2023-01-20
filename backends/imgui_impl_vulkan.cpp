@@ -226,10 +226,7 @@ static bool g_FunctionsLoaded = true;
     IMGUI_VULKAN_FUNC_MAP_MACRO(vkResetFences) \
     IMGUI_VULKAN_FUNC_MAP_MACRO(vkQueueSubmit) \
     IMGUI_VULKAN_FUNC_MAP_MACRO(vkResetCommandPool) \
-    IMGUI_VULKAN_FUNC_MAP_MACRO(vkAcquireNextImageKHR) \
-    IMGUI_VULKAN_FUNC_MAP_MACRO(vkCmdBeginRendering) \
-    IMGUI_VULKAN_FUNC_MAP_MACRO(vkCmdEndRendering) \
-    IMGUI_VULKAN_FUNC_MAP_MACRO(vkCmdPipelineBarrier2)
+    IMGUI_VULKAN_FUNC_MAP_MACRO(vkAcquireNextImageKHR)
 
 // Define function pointers
 #define IMGUI_VULKAN_FUNC_DEF(func) static PFN_##func func;
