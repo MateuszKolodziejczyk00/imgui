@@ -73,6 +73,13 @@ IMGUI_IMPL_API void         ImGui_ImplVulkan_RenderDrawData(ImDrawData* draw_dat
 IMGUI_IMPL_API bool         ImGui_ImplVulkan_CreateFontsTexture(VkCommandBuffer command_buffer);
 IMGUI_IMPL_API void         ImGui_ImplVulkan_DestroyFontUploadObjects();
 IMGUI_IMPL_API void         ImGui_ImplVulkan_SetMinImageCount(uint32_t min_image_count); // To override MinImageCount after initialization (e.g. if swap chain is recreated)
+// MK Begin
+/**
+ * This functions sets descriptor pool used internally
+ * @Warning Using ImGui_ImplVulkan_RemoveTexture with this function is dangerous!
+ */
+IMGUI_IMPL_API void         ImGui_ImplVulkan_SwapDescriptorPool(VkDescriptorPool new_descriptor_pool);
+// MK End
 
 // Register a texture (VkDescriptorSet == ImTextureID)
 // FIXME: This is experimental in the sense that we are unsure how to best design/tackle this problem
