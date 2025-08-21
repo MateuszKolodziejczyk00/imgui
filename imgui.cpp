@@ -14161,7 +14161,7 @@ void ImGui::WindowSyncOwnedViewport(ImGuiWindow* window, ImGuiWindow* parent_win
 
 // Called by user at the end of the main loop, after EndFrame()
 // This will handle the creation/update of all OS windows via function defined in the ImGuiPlatformIO api.
-void ImGui::UpdatePlatformWindows()
+void ImGui::UpdatePlatformWindows(/*MK Begin*/ImGuiFlushGPUFunc flush_func, void* user_data/*MK END*/)
 {
     ImGuiContext& g = *GImGui;
     IM_ASSERT(g.FrameCountEnded == g.FrameCount && "Forgot to call Render() or EndFrame() before UpdatePlatformWindows()?");
@@ -14183,6 +14183,12 @@ void ImGui::UpdatePlatformWindows()
         destroy_platform_window |= (viewport->Window && !IsWindowActiveAndVisible(viewport->Window));
         if (destroy_platform_window)
         {
+            // MK Begin
+            if (flush_func)
+            {
+                flush_func(user_data);
+            }
+            // MK End
             DestroyPlatformWindow(viewport);
             continue;
         }
@@ -14198,7 +14204,15 @@ void ImGui::UpdatePlatformWindows()
             IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Create Platform Window %08X '%s'\n", viewport->ID, viewport->Window ? viewport->Window->Name : "n/a");
             g.PlatformIO.Platform_CreateWindow(viewport);
             if (g.PlatformIO.Renderer_CreateWindow != NULL)
+            {
+            // MK Begin
+            if (flush_func)
+            {
+                flush_func(user_data);
+            }
+            // MK End
                 g.PlatformIO.Renderer_CreateWindow(viewport);
+            }
             viewport->LastNameHash = 0;
             viewport->LastPlatformPos = viewport->LastPlatformSize = ImVec2(FLT_MAX, FLT_MAX); // By clearing those we'll enforce a call to Platform_SetWindowPos/Size below, before Platform_ShowWindow (FIXME: Is that necessary?)
             viewport->LastRendererSize = viewport->Size;                                       // We don't need to call Renderer_SetWindowSize() as it is expected Renderer_CreateWindow() already did it.
@@ -14209,9 +14223,25 @@ void ImGui::UpdatePlatformWindows()
         if ((viewport->LastPlatformPos.x != viewport->Pos.x || viewport->LastPlatformPos.y != viewport->Pos.y) && !viewport->PlatformRequestMove)
             g.PlatformIO.Platform_SetWindowPos(viewport, viewport->Pos);
         if ((viewport->LastPlatformSize.x != viewport->Size.x || viewport->LastPlatformSize.y != viewport->Size.y) && !viewport->PlatformRequestResize)
+        {
+            // MK Begin
+            if (flush_func)
+            {
+                flush_func(user_data);
+            }
+            // MK End
             g.PlatformIO.Platform_SetWindowSize(viewport, viewport->Size);
+        }
         if ((viewport->LastRendererSize.x != viewport->Size.x || viewport->LastRendererSize.y != viewport->Size.y) && g.PlatformIO.Renderer_SetWindowSize)
+        {
+            // MK Begin
+            if (flush_func)
+            {
+                flush_func(user_data);
+            }
+            // MK End
             g.PlatformIO.Renderer_SetWindowSize(viewport, viewport->Size);
+        }
         viewport->LastPlatformPos = viewport->Pos;
         viewport->LastPlatformSize = viewport->LastRendererSize = viewport->Size;
 
