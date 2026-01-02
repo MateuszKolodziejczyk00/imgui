@@ -70,6 +70,8 @@
 #include "imgui_impl_vulkan.h"
 #include <stdio.h>
 
+#define ENABLE_UNIFIED_IMAGE_LAYOUTS 1
+
 // Visual Studio warnings
 #ifdef _MSC_VER
 #pragma warning (disable: 4127) // condition expression is constant
@@ -669,7 +671,11 @@ bool ImGui_ImplVulkan_CreateFontsTexture(VkCommandBuffer command_buffer)
     }
 
     // Create the Descriptor Set:
+#if ENABLE_UNIFIED_IMAGE_LAYOUTS
+    bd->FontDescriptorSet = (VkDescriptorSet)ImGui_ImplVulkan_AddTexture(bd->FontSampler, bd->FontView, VK_IMAGE_LAYOUT_GENERAL);
+#else
     bd->FontDescriptorSet = (VkDescriptorSet)ImGui_ImplVulkan_AddTexture(bd->FontSampler, bd->FontView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+#endif
 
     // Create the Upload Buffer:
     {
@@ -714,7 +720,11 @@ bool ImGui_ImplVulkan_CreateFontsTexture(VkCommandBuffer command_buffer)
         copy_barrier[0].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
         copy_barrier[0].dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
         copy_barrier[0].oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+#if ENABLE_UNIFIED_IMAGE_LAYOUTS
+        copy_barrier[0].newLayout = VK_IMAGE_LAYOUT_GENERAL;
+#else
         copy_barrier[0].newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+#endif
         copy_barrier[0].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         copy_barrier[0].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         copy_barrier[0].image = bd->FontImage;
@@ -729,14 +739,23 @@ bool ImGui_ImplVulkan_CreateFontsTexture(VkCommandBuffer command_buffer)
         region.imageExtent.width = width;
         region.imageExtent.height = height;
         region.imageExtent.depth = 1;
+#if ENABLE_UNIFIED_IMAGE_LAYOUTS
+        vkCmdCopyBufferToImage(command_buffer, bd->UploadBuffer, bd->FontImage, VK_IMAGE_LAYOUT_GENERAL, 1, &region);
+#else
         vkCmdCopyBufferToImage(command_buffer, bd->UploadBuffer, bd->FontImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+#endif
 
         VkImageMemoryBarrier use_barrier[1] = {};
         use_barrier[0].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
         use_barrier[0].srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
         use_barrier[0].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+#if ENABLE_UNIFIED_IMAGE_LAYOUTS
+        use_barrier[0].oldLayout = VK_IMAGE_LAYOUT_GENERAL;
+        use_barrier[0].newLayout = VK_IMAGE_LAYOUT_GENERAL;
+#else
         use_barrier[0].oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
         use_barrier[0].newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+#endif
         use_barrier[0].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         use_barrier[0].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         use_barrier[0].image = bd->FontImage;
@@ -1785,7 +1804,11 @@ static void ImGui_ImplVulkan_RenderWindow(ImGuiViewport* viewport, void*)
         barrier.dstStageMask						= VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
         barrier.dstAccessMask						= VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT;
         barrier.oldLayout							= VK_IMAGE_LAYOUT_UNDEFINED;
+#if ENABLE_UNIFIED_IMAGE_LAYOUTS
+        barrier.newLayout							= VK_IMAGE_LAYOUT_GENERAL;
+#else
         barrier.newLayout							= VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+#endif
         barrier.srcQueueFamilyIndex					= VK_QUEUE_FAMILY_IGNORED;
         barrier.dstQueueFamilyIndex					= VK_QUEUE_FAMILY_IGNORED;
 
@@ -1800,7 +1823,11 @@ static void ImGui_ImplVulkan_RenderWindow(ImGuiViewport* viewport, void*)
         VkRenderingAttachmentInfo color_attachment = {};
         color_attachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
         color_attachment.imageView = fd->BackbufferView;
+#if ENABLE_UNIFIED_IMAGE_LAYOUTS
+        color_attachment.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+#else
         color_attachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+#endif
         color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
         color_attachment.clearValue = wd->ClearValue;
@@ -1836,8 +1863,13 @@ static void ImGui_ImplVulkan_RenderWindow(ImGuiViewport* viewport, void*)
         barrier.srcAccessMask						= VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT;
         barrier.dstStageMask						= VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
         barrier.dstAccessMask						= 0;
+#if ENABLE_UNIFIED_IMAGE_LAYOUTS
+        barrier.oldLayout							= VK_IMAGE_LAYOUT_GENERAL;
+        barrier.newLayout							= VK_IMAGE_LAYOUT_GENERAL;
+#else
         barrier.oldLayout							= VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         barrier.newLayout							= VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+#endif
         barrier.srcQueueFamilyIndex					= VK_QUEUE_FAMILY_IGNORED;
         barrier.dstQueueFamilyIndex					= VK_QUEUE_FAMILY_IGNORED;
 
